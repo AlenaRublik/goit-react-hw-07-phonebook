@@ -8,14 +8,25 @@ import {
   SpanNumber,
   ButtonDlt,
 } from './Contacts.styled';
-import { useDispatch, useSelector } from 'react-redux';
-import { deleteContact } from 'redux/contactsSlice';
-import { getContacts, getFilter } from 'redux/selectors';
+import {
+  useGetContactsQuery,
+  useDeleteContactMutation,
+} from '../../redux/contactsSlice.js';
+import { useSelector } from 'react-redux';
+import { selectFilter } from 'redux/selectors';
+import { Loader } from 'components/Loader/Loader';
+import { toast } from 'react-toastify';
 
 export const Contacts = () => {
-  const contacts = useSelector(getContacts);
-  const filter = useSelector(getFilter);
-  const dispatch = useDispatch();
+   const deleteContactId = id => {
+    deleteContact(id);
+    toast.success('Contact sucessfully deleted');
+  };
+
+  const { data: contacts = [], isLoading, error } = useGetContactsQuery();
+  const [deleteContact] = useDeleteContactMutation();
+
+  const filter = useSelector(selectFilter);
 
   const getVisibleContacts = (() => {
     return contacts
@@ -27,6 +38,9 @@ export const Contacts = () => {
   })();
 
   return (
+    <>
+      {isLoading && <Loader/>}
+      {error && <p>{error}</p>}
     <UlList>
       {getVisibleContacts.map(({ id, name, number }) => {
         return (
@@ -37,14 +51,14 @@ export const Contacts = () => {
             <SpanName>{name}</SpanName>
             <SpanNumber>{number}</SpanNumber>
             <ButtonDlt type="button"
-              onClick={() => dispatch(deleteContact(id))}
+              onClick={() => deleteContactId(id)}
             >
               <BsFillTrash3Fill />
             </ButtonDlt>
           </LiItem>
         );
       })}
-    </UlList>
+    </UlList></>
   );
 }
 
